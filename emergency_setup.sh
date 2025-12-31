@@ -51,19 +51,6 @@ download_models() {
     fi
 }
 
-install_cloudflared() {
-    echo "Installing Cloudflare Tunnel (cloudflared)..."
-    if ! command -v cloudflared &> /dev/null; then
-        mkdir -p /tmp/cloudflared
-        cd /tmp/cloudflared
-        wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
-        dpkg -i cloudflared-linux-amd64.deb
-        rm cloudflared-linux-amd64.deb
-        echo "Cloudflared installed successfully."
-    else
-        echo "Cloudflared is already installed."
-    fi
-}
 
 # ---------------------------------------------------------------------------- #
 #                               Main Execution                                   #
@@ -131,17 +118,8 @@ download_models "$TEXT_ENCODER_MODELS" "$COMFYUI_DIR/models/text_encoders" "text
 download_models "$DIFFUSION_MODELS" "$COMFYUI_DIR/models/diffusion_models" "diffusion_model"
 download_models "$VAE_MODELS" "$COMFYUI_DIR/models/vae" "vae"
 
-# 4. Start Cloudflare Tunnel
-install_cloudflared
-echo ">>> Starting Cloudflare Tunnel..."
+# 4. Final Output
 echo "------------------------------------------------------------------"
-echo " LOOK BELOW FOR YOUR PUBLIC URL (trycloudflare.com)"
+echo "Setup Complete! Dependencies and models have been synced."
+echo "You may need to restart ComfyUI for the new nodes to appear."
 echo "------------------------------------------------------------------"
-# Pass the port 8188 to cloudflared
-nohup cloudflared tunnel --url http://localhost:8188 > /workspace/cloudflared.log 2>&1 &
-sleep 5
-cat /workspace/cloudflared.log | grep -o 'https://.*\.trycloudflare.com'
-
-echo "------------------------------------------------------------------"
-echo "Setup Complete! If ComfyUI is running, use the link above."
-echo "If ComfyUI is NOT running, start it now."
