@@ -195,7 +195,15 @@ download_models "$TEXT_ENCODER_MODELS" "$COMFYUI_DIR/models/text_encoders" "text
 download_models "$DIFFUSION_MODELS" "$COMFYUI_DIR/models/diffusion_models" "diffusion_model"
 download_models "$VAE_MODELS" "$COMFYUI_DIR/models/vae" "vae"
 
-# 6. Start ComfyUI
+# 6. Bridge Port 80 to 8188 (RunPod Proxy fallback)
+if ! command -v socat &> /dev/null; then
+    echo "socat not found, skipping port bridge."
+else
+    echo "Setting up Port 80 -> 8188 bridge..."
+    socat TCP-LISTEN:80,fork,reuseaddr TCP:127.0.0.1:8188 &
+fi
+
+# 7. Start ComfyUI
 cd $COMFYUI_DIR
 FIXED_ARGS="--listen 0.0.0.0 --port 8188"
 if [ -s "$ARGS_FILE" ]; then

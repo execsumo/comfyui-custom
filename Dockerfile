@@ -101,6 +101,8 @@ RUN apt-get update && \
     ca-certificates \
     less \
     rsync \
+    socat \
+    iproute2 \
     net-tools \
     iputils-ping \
     procps \
