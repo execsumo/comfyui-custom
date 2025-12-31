@@ -126,11 +126,6 @@ export_env_vars() {
 setup_ssh
 export_env_vars
 
-# Download models if specified
-download_models "$CHECKPOINT_MODELS" "$COMFYUI_DIR/models/checkpoints" "checkpoint"
-download_models "$TEXT_ENCODER_MODELS" "$COMFYUI_DIR/models/text_encoders" "text_encoder"
-download_models "$DIFFUSION_MODELS" "$COMFYUI_DIR/models/diffusion_models" "diffusion_model"
-download_models "$VAE_MODELS" "$COMFYUI_DIR/models/vae" "vae"
 
 
 # Create default comfyui_args.txt if it doesn't exist
@@ -248,6 +243,12 @@ else
         fi
     done
 fi
+
+# Download models if specified
+download_models "$CHECKPOINT_MODELS" "$COMFYUI_DIR/models/checkpoints" "checkpoint"
+download_models "$TEXT_ENCODER_MODELS" "$COMFYUI_DIR/models/text_encoders" "text_encoder"
+download_models "$DIFFUSION_MODELS" "$COMFYUI_DIR/models/diffusion_models" "diffusion_model"
+download_models "$VAE_MODELS" "$COMFYUI_DIR/models/vae" "vae"
 
 # Start ComfyUI with custom arguments if provided
 cd $COMFYUI_DIR
