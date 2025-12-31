@@ -14,7 +14,7 @@ DIFFUSION_MODELS=""
 VAE_MODELS=""
 
 # Add URLs for ComfyUI custom nodes here (space-separated)
-CUSTOM_NODES="https://github.com/rgthree/rgthree-comfy.git"
+CUSTOM_NODES="https://github.com/rgthree/rgthree-comfy.git https://github.com/kijai/ComfyUI-KJNodes https://github.com/MadiatorLabs/ComfyUI-RunpodDirect"
 
 # ---------------------------------------------------------------------------- #
 #                          Function Definitions                                  #
