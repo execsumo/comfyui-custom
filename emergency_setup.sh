@@ -7,8 +7,6 @@
 # 2. Run: bash emergency_setup.sh
 # 
 # What it does:
-# - Installs Cloudflare Tunnel (cloudflared) for emergency public access
-# - Installs 'comfy-cli' for management
 # - Downloads your custom models defined below
 # - Installs your custom nodes defined below
 # ============================================================================
@@ -58,13 +56,6 @@ download_models() {
 
 echo ">>> Starting Emergency Setup..."
 
-# 1. Install Comfy-CLI
-if ! pip show comfy-cli &> /dev/null; then
-    echo "Installing comfy-cli..."
-    pip install comfy-cli
-else
-    echo "comfy-cli is already installed."
-fi
 
 # 2. Sync Custom Nodes
 echo ">>> Syncing Custom Nodes..."
