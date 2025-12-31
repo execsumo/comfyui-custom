@@ -3,8 +3,6 @@ set -e  # Exit the script if any statement returns a non-true return value
 
 COMFYUI_DIR="/workspace/runpod-slim/ComfyUI"
 VENV_DIR="$COMFYUI_DIR/.venv"
-FILEBROWSER_CONFIG="/root/.config/filebrowser/config.json"
-DB_FILE="/workspace/runpod-slim/filebrowser.db"
 
 # ---------------------------------------------------------------------------- #
 #                             Customizable Models                               #
@@ -14,6 +12,9 @@ CHECKPOINT_MODELS="https://huggingface.co/SeeSee21/Z-Image-Turbo-AIO/resolve/mai
 TEXT_ENCODER_MODELS=""
 DIFFUSION_MODELS=""
 VAE_MODELS=""
+
+# Add URLs for ComfyUI custom nodes here (space-separated)
+CUSTOM_NODES="https://github.com/rgthree/rgthree-comfy.git"
 
 # ---------------------------------------------------------------------------- #
 #                          Function Definitions                                  #
@@ -126,135 +127,78 @@ export_env_vars() {
 setup_ssh
 export_env_vars
 
-
-
 # Create default comfyui_args.txt if it doesn't exist
 ARGS_FILE="/workspace/runpod-slim/comfyui_args.txt"
 if [ ! -f "$ARGS_FILE" ]; then
+    mkdir -p "/workspace/runpod-slim"
     echo "# Add your custom ComfyUI arguments here (one per line)" > "$ARGS_FILE"
     echo "Created empty ComfyUI arguments file at $ARGS_FILE"
 fi
 
-# Setup ComfyUI if needed
-if [ ! -d "$COMFYUI_DIR" ] || [ ! -d "$VENV_DIR" ]; then
-    echo "First time setup: Installing ComfyUI and dependencies..."
-    
-    # Clone ComfyUI if not present
-    if [ ! -d "$COMFYUI_DIR" ]; then
-        cd /workspace/runpod-slim
-        git clone https://github.com/comfyanonymous/ComfyUI.git
-    fi
-    
-    # Install ComfyUI-Manager if not present
-    if [ ! -d "$COMFYUI_DIR/custom_nodes/ComfyUI-Manager" ]; then
-        echo "Installing ComfyUI-Manager..."
-        mkdir -p "$COMFYUI_DIR/custom_nodes"
-        cd "$COMFYUI_DIR/custom_nodes"
-        git clone https://github.com/ltdrdata/ComfyUI-Manager.git
-    fi
-
-    # Install additional custom nodes
-    CUSTOM_NODES=(
-        "https://github.com/kijai/ComfyUI-KJNodes"
-        "https://github.com/MoonGoblinDev/Civicomfy"
-        "https://github.com/MadiatorLabs/ComfyUI-RunpodDirect"
-    )
-
-    for repo in "${CUSTOM_NODES[@]}"; do
-        repo_name=$(basename "$repo")
-        if [ ! -d "$COMFYUI_DIR/custom_nodes/$repo_name" ]; then
-            echo "Installing $repo_name..."
-            cd "$COMFYUI_DIR/custom_nodes"
-            git clone "$repo"
-        fi
-    done
-    
-    # Create and setup virtual environment if not present
-    if [ ! -d "$VENV_DIR" ]; then
-        cd $COMFYUI_DIR
-        # Create venv with access to system packages (torch, numpy, etc. pre-installed in image)
-        python3.12 -m venv --system-site-packages $VENV_DIR
-        source $VENV_DIR/bin/activate
-
-        # Ensure pip is available in the venv (needed for ComfyUI-Manager)
-        python -m ensurepip --upgrade
-        python -m pip install --upgrade pip
-
-        echo "Base packages (torch, numpy, etc.) available from system site-packages"
-        echo "Installing custom node dependencies..."
-
-        # Install dependencies for all custom nodes
-        cd "$COMFYUI_DIR/custom_nodes"
-        for node_dir in */; do
-            if [ -d "$node_dir" ]; then
-                echo "Checking dependencies for $node_dir..."
-                cd "$COMFYUI_DIR/custom_nodes/$node_dir"
-                
-                # Check for requirements.txt
-                if [ -f "requirements.txt" ]; then
-                    echo "Installing requirements.txt for $node_dir"
-                    pip install --no-cache-dir -r requirements.txt
-                fi
-
-                # Check for install.py
-                if [ -f "install.py" ]; then
-                    echo "Running install.py for $node_dir"
-                    python install.py
-                fi
-
-                # Check for setup.py
-                if [ -f "setup.py" ]; then
-                    echo "Running setup.py for $node_dir"
-                    pip install --no-cache-dir -e .
-                fi
-            fi
-        done
-    fi
-else
-    # Just activate the existing venv
-    source $VENV_DIR/bin/activate
-
-    echo "Checking for custom node dependencies..."
-
-    # Install dependencies for all custom nodes
-    cd "$COMFYUI_DIR/custom_nodes"
-    for node_dir in */; do
-        if [ -d "$node_dir" ]; then
-            echo "Checking dependencies for $node_dir..."
-            cd "$COMFYUI_DIR/custom_nodes/$node_dir"
-            
-            # Check for requirements.txt
-            if [ -f "requirements.txt" ]; then
-                echo "Installing requirements.txt for $node_dir"
-                uv pip install --no-cache -r requirements.txt
-            fi
-            
-            # Check for install.py
-            if [ -f "install.py" ]; then
-                echo "Running install.py for $node_dir"
-                python install.py
-            fi
-            
-            # Check for setup.py
-            if [ -f "setup.py" ]; then
-                echo "Running setup.py for $node_dir"
-                uv pip install --no-cache -e .
-            fi
-        fi
-    done
+# 1. Ensure ComfyUI is installed
+if [ ! -d "$COMFYUI_DIR" ]; then
+    echo "Cloning ComfyUI..."
+    mkdir -p "/workspace/runpod-slim"
+    cd /workspace/runpod-slim
+    git clone https://github.com/comfyanonymous/ComfyUI.git
 fi
 
-# Download models if specified
+# 2. Ensure Virtual Environment is setup
+if [ ! -d "$VENV_DIR" ]; then
+    echo "Creating virtual environment..."
+    cd $COMFYUI_DIR
+    python3.12 -m venv --system-site-packages $VENV_DIR
+    source $VENV_DIR/bin/activate
+    python -m ensurepip --upgrade
+    python -m pip install --upgrade pip
+else
+    source $VENV_DIR/bin/activate
+fi
+
+# 3. Ensure ComfyUI-Manager is installed (required for most setups)
+if [ ! -d "$COMFYUI_DIR/custom_nodes/ComfyUI-Manager" ]; then
+    echo "Installing ComfyUI-Manager..."
+    mkdir -p "$COMFYUI_DIR/custom_nodes"
+    cd "$COMFYUI_DIR/custom_nodes"
+    git clone https://github.com/ltdrdata/ComfyUI-Manager.git
+    cd ComfyUI-Manager && pip install -r requirements.txt
+fi
+
+# 4. Sync dynamic custom nodes from variable
+for repo in $CUSTOM_NODES; do
+    repo_name=$(basename "$repo" .git)
+    if [ ! -d "$COMFYUI_DIR/custom_nodes/$repo_name" ]; then
+        echo "Installing new custom node: $repo_name..."
+        cd "$COMFYUI_DIR/custom_nodes"
+        git clone "$repo"
+        
+        # Install dependencies for the new node immediately
+        cd "$COMFYUI_DIR/custom_nodes/$repo_name"
+        if [ -f "requirements.txt" ]; then
+            echo "Installing requirements for $repo_name..."
+            pip install --no-cache-dir -r requirements.txt
+        fi
+        if [ -f "install.py" ]; then
+            echo "Running install.py for $repo_name..."
+            python install.py
+        fi
+        if [ -f "setup.py" ]; then
+            echo "Running setup.py for $repo_name..."
+            pip install --no-cache-dir -e .
+        fi
+    fi
+done
+
+# 5. Download models
 download_models "$CHECKPOINT_MODELS" "$COMFYUI_DIR/models/checkpoints" "checkpoint"
 download_models "$TEXT_ENCODER_MODELS" "$COMFYUI_DIR/models/text_encoders" "text_encoder"
 download_models "$DIFFUSION_MODELS" "$COMFYUI_DIR/models/diffusion_models" "diffusion_model"
 download_models "$VAE_MODELS" "$COMFYUI_DIR/models/vae" "vae"
 
-# Start ComfyUI with custom arguments if provided
+# 6. Start ComfyUI
 cd $COMFYUI_DIR
 FIXED_ARGS="--listen 0.0.0.0 --port 8188"
 if [ -s "$ARGS_FILE" ]; then
-    # File exists and is not empty, combine fixed args with custom args
     CUSTOM_ARGS=$(grep -v '^#' "$ARGS_FILE" | tr '\n' ' ')
     if [ ! -z "$CUSTOM_ARGS" ]; then
         echo "Starting ComfyUI with additional arguments: $CUSTOM_ARGS"
@@ -264,7 +208,6 @@ if [ -s "$ARGS_FILE" ]; then
         nohup python main.py $FIXED_ARGS &> /workspace/runpod-slim/comfyui.log &
     fi
 else
-    # File is empty, use only fixed args
     echo "Starting ComfyUI with default arguments"
     nohup python main.py $FIXED_ARGS &> /workspace/runpod-slim/comfyui.log &
 fi
