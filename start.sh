@@ -7,6 +7,12 @@ FILEBROWSER_CONFIG="/root/.config/filebrowser/config.json"
 DB_FILE="/workspace/runpod-slim/filebrowser.db"
 
 # ---------------------------------------------------------------------------- #
+#                             Customizable Models                               #
+# ---------------------------------------------------------------------------- #
+# Add URLs for checkpoint models here (space-separated)
+CHECKPOINT_MODELS="https://huggingface.co/SeeSee21/Z-Image-Turbo-AIO/resolve/main/z-image-turbo-bf16-aio.safetensors"
+
+# ---------------------------------------------------------------------------- #
 #                          Function Definitions                                  #
 # ---------------------------------------------------------------------------- #
 
@@ -96,6 +102,20 @@ export_env_vars() {
 # Setup environment
 setup_ssh
 export_env_vars
+
+# Download models if specified
+if [[ ! -z "$CHECKPOINT_MODELS" ]]; then
+    mkdir -p "$COMFYUI_DIR/models/checkpoints"
+    for url in $CHECKPOINT_MODELS; do
+        filename=$(basename "$url")
+        if [ ! -f "$COMFYUI_DIR/models/checkpoints/$filename" ]; then
+            echo "Downloading checkpoint: $filename..."
+            wget -q --show-progress -O "$COMFYUI_DIR/models/checkpoints/$filename" "$url"
+        else
+            echo "Checkpoint $filename already exists, skipping."
+        fi
+    done
+fi
 
 
 # Create default comfyui_args.txt if it doesn't exist
