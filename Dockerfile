@@ -127,15 +127,12 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 RUN pip uninstall -y uv 2>/dev/null || true && \
     rm -f /usr/local/bin/uv /usr/local/bin/uvx
 
-# Install FileBrowser
-RUN curl -fsSL https://raw.githubusercontent.com/filebrowser/get/master/get.sh | bash
-
 # Set CUDA environment variables
 ENV PATH=/usr/local/cuda/bin:${PATH}
 ENV LD_LIBRARY_PATH=/usr/local/cuda/lib64
 
-# Install Jupyter with Python kernel
-RUN pip install jupyter
+# Install comfy-cli
+RUN pip install comfy-cli
 
 # Configure SSH for root login
 RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config && \
@@ -147,7 +144,7 @@ RUN mkdir -p /workspace/runpod-slim
 WORKDIR /workspace/runpod-slim
 
 # Expose ports
-EXPOSE 8188 22 8888 8080
+EXPOSE 8188 22
 
 # Copy and set up start script
 COPY start.sh /start.sh

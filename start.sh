@@ -88,23 +88,6 @@ export_env_vars() {
     chmod 600 "$SSH_ENV_DIR"
 }
 
-# Start Jupyter Lab server for remote access
-start_jupyter() {
-    mkdir -p /workspace
-    echo "Starting Jupyter Lab on port 8888..."
-    nohup jupyter lab \
-        --allow-root \
-        --no-browser \
-        --port=8888 \
-        --ip=0.0.0.0 \
-        --FileContentsManager.delete_to_trash=False \
-        --FileContentsManager.preferred_dir=/workspace \
-        --ServerApp.root_dir=/workspace \
-        --ServerApp.terminado_settings='{"shell_command":["/bin/bash"]}' \
-        --IdentityProvider.token="${JUPYTER_PASSWORD:-}" \
-        --ServerApp.allow_origin=* &> /jupyter.log &
-    echo "Jupyter Lab started"
-}
 
 # ---------------------------------------------------------------------------- #
 #                               Main Program                                     #
@@ -114,24 +97,6 @@ start_jupyter() {
 setup_ssh
 export_env_vars
 
-# Initialize FileBrowser if not already done
-if [ ! -f "$DB_FILE" ]; then
-    echo "Initializing FileBrowser..."
-    filebrowser config init
-    filebrowser config set --address 0.0.0.0
-    filebrowser config set --port 8080
-    filebrowser config set --root /workspace
-    filebrowser config set --auth.method=json
-    filebrowser users add admin adminadmin12 --perm.admin
-else
-    echo "Using existing FileBrowser configuration..."
-fi
-
-# Start FileBrowser
-echo "Starting FileBrowser on port 8080..."
-nohup filebrowser &> /filebrowser.log &
-
-start_jupyter
 
 # Create default comfyui_args.txt if it doesn't exist
 ARGS_FILE="/workspace/runpod-slim/comfyui_args.txt"
