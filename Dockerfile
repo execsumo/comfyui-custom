@@ -105,6 +105,7 @@ RUN apt-get update && \
     tmux \
     ca-certificates \
     less \
+    rsync \
     net-tools \
     iputils-ping \
     procps \
