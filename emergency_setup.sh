@@ -19,8 +19,8 @@ set -e
 COMFYUI_DIR="/workspace/runpod-slim/ComfyUI"
 VENV_DIR="$COMFYUI_DIR/.venv"
 
-# Custom Nodes to Install
-CUSTOM_NODES="https://github.com/rgthree/rgthree-comfy.git https://github.com/kijai/ComfyUI-KJNodes https://github.com/MadiatorLabs/ComfyUI-RunpodDirect"
+# Custom Nodes to Install (space separated)
+CUSTOM_NODES="https://github.com/rgthree/rgthree-comfy.git"
 
 # Models to Download
 CHECKPOINT_MODELS="https://huggingface.co/SeeSee21/Z-Image-Turbo-AIO/resolve/main/z-image-turbo-bf16-aio.safetensors"
