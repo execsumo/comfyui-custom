@@ -47,7 +47,9 @@ RUN git clone https://github.com/comfyanonymous/ComfyUI.git
 WORKDIR /tmp/build/ComfyUI/custom_nodes
 RUN git clone https://github.com/ltdrdata/ComfyUI-Manager.git && \
     git clone https://github.com/kijai/ComfyUI-KJNodes && \
-    git clone https://github.com/MoonGoblinDev/Civicomfy
+    git clone https://github.com/MoonGoblinDev/Civicomfy && \
+    git clone https://github.com/Kosinkadink/ComfyUI-Advanced-ControlNet.git && \
+    git clone https://github.com/Kosinkadink/ComfyUI-AnimateDiff-Evolved.git
 
 # Install PyTorch and all ComfyUI dependencies
 RUN python3.12 -m pip install --no-cache-dir \
