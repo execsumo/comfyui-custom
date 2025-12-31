@@ -9,12 +9,35 @@ DB_FILE="/workspace/runpod-slim/filebrowser.db"
 # ---------------------------------------------------------------------------- #
 #                             Customizable Models                               #
 # ---------------------------------------------------------------------------- #
-# Add URLs for checkpoint models here (space-separated)
+# Add URLs for models here (space-separated)
 CHECKPOINT_MODELS="https://huggingface.co/SeeSee21/Z-Image-Turbo-AIO/resolve/main/z-image-turbo-bf16-aio.safetensors"
+TEXT_ENCODER_MODELS=""
+DIFFUSION_MODELS=""
+VAE_MODELS=""
 
 # ---------------------------------------------------------------------------- #
 #                          Function Definitions                                  #
 # ---------------------------------------------------------------------------- #
+
+# Reusable function for downloading models
+download_models() {
+    local urls="$1"
+    local target_dir="$2"
+    local type_name="$3"
+
+    if [[ ! -z "$urls" ]]; then
+        mkdir -p "$target_dir"
+        for url in $urls; do
+            filename=$(basename "$url")
+            if [ ! -f "$target_dir/$filename" ]; then
+                echo "Downloading $type_name: $filename..."
+                wget -q --show-progress -O "$target_dir/$filename" "$url"
+            else
+                echo "$type_name $filename already exists, skipping."
+            fi
+        done
+    fi
+}
 
 # Setup SSH with optional key or random password
 setup_ssh() {
@@ -104,18 +127,10 @@ setup_ssh
 export_env_vars
 
 # Download models if specified
-if [[ ! -z "$CHECKPOINT_MODELS" ]]; then
-    mkdir -p "$COMFYUI_DIR/models/checkpoints"
-    for url in $CHECKPOINT_MODELS; do
-        filename=$(basename "$url")
-        if [ ! -f "$COMFYUI_DIR/models/checkpoints/$filename" ]; then
-            echo "Downloading checkpoint: $filename..."
-            wget -q --show-progress -O "$COMFYUI_DIR/models/checkpoints/$filename" "$url"
-        else
-            echo "Checkpoint $filename already exists, skipping."
-        fi
-    done
-fi
+download_models "$CHECKPOINT_MODELS" "$COMFYUI_DIR/models/checkpoints" "checkpoint"
+download_models "$TEXT_ENCODER_MODELS" "$COMFYUI_DIR/models/text_encoders" "text_encoder"
+download_models "$DIFFUSION_MODELS" "$COMFYUI_DIR/models/diffusion_models" "diffusion_model"
+download_models "$VAE_MODELS" "$COMFYUI_DIR/models/vae" "vae"
 
 
 # Create default comfyui_args.txt if it doesn't exist
